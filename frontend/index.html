@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A500活动评分工具</title>
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1890ff;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .upload-area {
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #1890ff;
+            background-color: #f6f8fa;
+        }
+
+        .upload-area.active {
+            border-color: #1890ff;
+            background-color: #e6f7ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #d9d9d9;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #40a9ff;
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result-table th {
+            background-color: #fafafa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #1890ff;
+        }
+
+        .error {
+            background-color: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #f5222d;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1890ff;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .upload-area {
+                padding: 20px;
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+
+            .stat-item {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>A500活动评分工具</h1>
+            <p>上传用户活动明细，自动计算评分并生成结果</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title">文件上传</div>
+            <div id="uploadArea" class="upload-area">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽文件到此处上传</div>
+                <div class="upload-hint">支持 Excel (.xlsx) 和 CSV 格式</div>
+                <input type="file" id="fileInput" style="display: none;" accept=".xlsx,.csv">
+            </div>
+            <div id="fileInfo" style="display: none; margin-bottom: 20px;">
+                <p>已选择文件: <span id="fileName"></span></p>
+            </div>
+            <button id="calculateBtn" class="btn btn-primary" disabled>开始计算</button>
+            <button id="resetBtn" class="btn btn-secondary" disabled>重新上传</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>正在处理数据，请稍候...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="success" class="success" style="display: none;"></div>
+
+        <div id="result" class="card" style="display: none;">
+            <div class="card-title">评分结果</div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">总用户数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgScore">0</div>
+                    <div class="stat-label">平均得分</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="maxScore">0</div>
+                    <div class="stat-label">最高得分</div>
+                </div>
+            </div>
+            <table class="result-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>用户名称</th>
+                        <th>发帖数</th>
+                        <th>总分</th>
+                        <th>点赞数量得分</th>
+                        <th>回帖数量得分</th>
+                        <th>留言时间得分</th>
+                        <th>内容质量得分</th>
+                        <th>晒操作/晒收益得分</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTableBody">
+                </tbody>
+            </table>
+            <div style="margin-top: 20px; text-align: right;">
+                <a id="downloadLink" class="btn btn-primary" href="#">下载完整结果</a>
+                <button id="newCalculationBtn" class="btn btn-secondary">新的计算</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fileId = null;
+        let resultId = null;
+
+        // 上传区域点击和拖拽事件
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const success = document.getElementById('success');
+        const result = document.getElementById('result');
+        const resultTableBody = document.getElementById('resultTableBody');
+        const downloadLink = document.getElementById('downloadLink');
+        const newCalculationBtn = document.getElementById('newCalculationBtn');
+        const totalUsers = document.getElementById('totalUsers');
+        const avgScore = document.getElementById('avgScore');
+        const maxScore = document.getElementById('maxScore');
+
+        // 点击上传区域
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 拖拽事件
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // 文件选择事件
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // 处理文件
+        function handleFile(file) {
+            if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.csv')) {
+                showError('仅支持Excel和CSV文件');
+                return;
+            }
+
+            fileName.textContent = file.name;
+            fileInfo.style.display = 'block';
+            calculateBtn.disabled = false;
+            resetBtn.disabled = false;
+
+            // 上传文件
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fileId = data.file_id;
+                    showSuccess('文件上传成功');
+                } else {
+                    showError(data.message);
+                }
+            })
+            .catch(err => {
+                showError('上传失败，请检查网络连接');
+            });
+        }
+
+        // 开始计算
+        calculateBtn.addEventListener('click', () => {
+            if (!fileId) {
+                showError('请先上传文件');
+                return;
+            }
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            success.style.display = 'none';
+            result.style.display = 'none';
+
+            fetch('/api/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ file_id: fileId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                if (data.success) {
+                    resultId = data.result_id;
+                    showSuccess('评分计算完成');
+                    displayResult(data.preview, data.total_count);
+                } else {
+                    showError(data.message);
+                }
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                showError('计算失败，请检查网络连接');
+            });
+        });
+
+        // 显示结果
+        function displayResult(previewData, totalCount) {
+            resultTableBody.innerHTML = '';
+
+            previewData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.排名}</td>
+                    <td>${item.用户名称}</td>
+                    <td>${item.发帖数}</td>
+                    <td>${item.总分}</td>
+                    <td>${item.点赞数量得分}</td>
+                    <td>${item.回帖数量得分}</td>
+                    <td>${item.留言时间得分}</td>
+                    <td>${item.内容质量得分}</td>
+                    <td>${item['晒操作/晒收益得分']}</td>
+                `;
+                resultTableBody.appendChild(row);
+            });
+
+            // 计算统计数据
+            const scores = previewData.map(item => item.总分);
+            const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+            const max = Math.max(...scores);
+
+            totalUsers.textContent = totalCount;
+            avgScore.textContent = avg.toFixed(2);
+            maxScore.textContent = max.toFixed(2);
+
+            // 设置下载链接
+            downloadLink.href = `/api/download/${resultId}`;
+
+            result.style.display = 'block';
+        }
+
+        // 重置
+        resetBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            calculateBtn.disabled = true;
+            resetBtn.disabled = true;
+            fileId = null;
+            resultId = null;
+            error.style.display = 'none';
+            success.style.display = 'none';
+            result.style.display = 'none';
+        });
+
+        // 新的计算
+        newCalculationBtn.addEventListener('click', () => {
+            resetBtn.click();
+        });
+
+        // 显示错误
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+            success.style.display = 'none';
+        }
+
+        // 显示成功
+        function showSuccess(message) {
+            success.textContent = message;
+            success.style.display = 'block';
+            error.style.display = 'none';
+        }
+
+        // 页面加载时检查服务状态
+        window.addEventListener('load', () => {
+            fetch('/api/health')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    showError('服务未启动，请先运行后端服务');
+                }
+            })
+            .catch(() => {
+                // 忽略健康检查错误，因为在Vercel部署时可能需要时间启动
+            });
+        });
+    </script>
+</body>
+</html>

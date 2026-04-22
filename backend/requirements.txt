@@ -1,0 +1,5 @@
+Flask
+Flask-CORS
+pandas
+openpyxl
+python-dotenv

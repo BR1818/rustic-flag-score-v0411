@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试连接</title>
+</head>
+<body>
+    <h1>测试后端连接</h1>
+    <button onclick="testHealth()">测试健康检查</button>
+    <div id="result"></div>
+
+    <script>
+        function testHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '测试中...';
+
+            fetch('http://localhost:5001/api/health')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    resultDiv.innerHTML = '成功: ' + JSON.stringify(data);
+                })
+                .catch(err => {
+                    resultDiv.innerHTML = '失败: ' + err.message;
+                    console.error('Error:', err);
+                });
+        }
+    </script>
+</body>
+</html>
