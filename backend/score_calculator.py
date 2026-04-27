@@ -6,6 +6,7 @@ A500活动评分计算模块
 
 import pandas as pd
 from datetime import datetime
+import io
 
 # 活动关键时间节点
 ACTIVITY_START = datetime(2026, 3, 13, 10, 0, 0)
@@ -160,12 +161,25 @@ def process_file(file_path):
     """处理上传的文件并计算评分"""
     try:
         # 读取文件
-        if file_path.endswith('.xlsx'):
-            df = pd.read_excel(file_path)
-        elif file_path.endswith('.csv'):
-            df = pd.read_csv(file_path)
+        if hasattr(file_path, 'read'):
+            # 文件对象（内存中的BytesIO）
+            file_content = file_path.read()
+            if file_content.startswith(b'PK'):
+                # Excel文件
+                df = pd.read_excel(io.BytesIO(file_content))
+            else:
+                # CSV文件
+                df = pd.read_csv(io.BytesIO(file_content))
+        elif isinstance(file_path, str):
+            # 文件路径
+            if file_path.endswith('.xlsx'):
+                df = pd.read_excel(file_path)
+            elif file_path.endswith('.csv'):
+                df = pd.read_csv(file_path)
+            else:
+                raise ValueError("不支持的文件格式")
         else:
-            raise ValueError("不支持的文件格式")
+            raise ValueError("无效的文件输入")
 
         # 确保必要的列存在
         required_columns = ['发帖人', '发帖时间', '评论数', '点赞数', '发帖工具', '帖子摘要']

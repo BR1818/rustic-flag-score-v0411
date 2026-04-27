@@ -306,6 +306,7 @@
     <script>
         let fileId = null;
         let resultId = null;
+        let lastFormData = null;
 
         // 上传区域点击和拖拽事件
         const uploadArea = document.getElementById('uploadArea');
@@ -370,10 +371,11 @@
             // 上传文件
             const formData = new FormData();
             formData.append('file', file);
+            lastFormData = formData;
 
             fetch('/api/upload', {
                 method: 'POST',
-                body: formData
+                body: lastFormData
             })
             .then(response => response.json())
             .then(data => {
@@ -401,12 +403,9 @@
             success.style.display = 'none';
             result.style.display = 'none';
 
-            fetch('/api/calculate', {
+            fetch('/api/upload', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ file_id: fileId })
+                body: lastFormData
             })
             .then(response => response.json())
             .then(data => {
@@ -414,7 +413,7 @@
                 if (data.success) {
                     resultId = data.result_id;
                     showSuccess('评分计算完成');
-                    displayResult(data.preview, data.total_count);
+                    displayResult(data.preview, data.total_count, data.result_csv);
                 } else {
                     showError(data.message);
                 }
@@ -426,7 +425,7 @@
         });
 
         // 显示结果
-        function displayResult(previewData, totalCount) {
+        function displayResult(previewData, totalCount, resultCsv) {
             resultTableBody.innerHTML = '';
 
             previewData.forEach(item => {
@@ -446,7 +445,6 @@
             });
 
             // 计算统计数据
-            const scores = previewData.map(item => item.总分);
             const avg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
             const max = Math.max(...scores);
 
@@ -454,8 +452,20 @@
             avgScore.textContent = avg.toFixed(2);
             maxScore.textContent = max.toFixed(2);
 
-            // 设置下载链接
-            downloadLink.href = `/api/download/${resultId}`;
+            // 设置下载链接 - 使用 Blob 下载 CSV
+            if (resultCsv) {
+                downloadLink.href = '#';
+                downloadLink.onclick = function(e) {
+                    e.preventDefault();
+                    const blob = new Blob(['﻿' + resultCsv], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = '打分明细.csv';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                };
+            }
 
             result.style.display = 'block';
         }
@@ -468,6 +478,7 @@
             resetBtn.disabled = true;
             fileId = null;
             resultId = null;
+            lastFormData = null;
             error.style.display = 'none';
             success.style.display = 'none';
             result.style.display = 'none';
@@ -502,7 +513,7 @@
                 }
             })
             .catch(() => {
-                // 忽略健康检查错误，因为在Vercel部署时可能需要时间启动
+                // 忽略健康检查错误
             });
         });
     </script>
