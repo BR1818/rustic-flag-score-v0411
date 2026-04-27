@@ -7,7 +7,7 @@
     },
     {
       "src": "frontend/index.html",
-      "use": "static"
+      "use": "@vercel/static"
     }
   ],
   "routes": [
