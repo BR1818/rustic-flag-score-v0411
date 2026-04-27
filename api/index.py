@@ -199,3 +199,4 @@ def health_check():
 
 
 handler = app
+app = app
